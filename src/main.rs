@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 fn main() {
     let mut path = String::new();
-    io::stdin().read_line(&mut path).expect("Ошибка считанных данных");
+    io::stdin().read_line(&mut path).expect("Error reading line!");
     let path = path.trim();
     read_file(path);
 }
@@ -15,29 +15,53 @@ fn read_file(name: &str) {
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
     let result = parse_csv(&contents);
+    write_to_csv(result);
     println!("{}", "HI");
+}
+
+fn write_to_csv(content: HashMap<u64, HashMap<u64, String>>) -> Result<(), io::Error> {
+    let mut file = File::create("output.csv").unwrap();
+
+    let mut pos = 0;
+    for index_row in 0..content.len() {
+        let row = content.get(&(index_row as u64)).unwrap();
+        for index_el in 0..row.len() {
+            let element = row.get(&(index_el as u64)).unwrap();
+            let bytes_written = file.write(element.as_bytes()).unwrap();
+            pos += bytes_written;
+            if index_el < row.len() - 1 {
+                let bytes_written = file.write(b",").unwrap();
+                pos += bytes_written;
+            }
+        }
+
+        let bytes_written = file.write(b"\n").unwrap();
+        pos += bytes_written;
+    }
+
+    Ok(())
 }
 
 fn parse_csv(content: &String) -> HashMap<u64, HashMap<u64, String>> {
     let mut result: HashMap<u64, HashMap<u64, String>> = HashMap::new();
     let mut row: HashMap<u64, String> = HashMap::new();
-    let mut indexOverall = 0;
-    let mut indexRow = 0;
+    let mut index_overall = 0;
+    let mut index_row = 0;
     let mut buf = vec![];
     for c in content.chars() {
         match c {
             '\n' => {
-                row.insert(indexRow, buf.clone().iter().collect::<String>());
+                row.insert(index_row, buf.clone().iter().collect::<String>());
                 buf = vec![];
-                indexRow = 0;
-                result.insert(indexOverall, row.clone());
+                index_row = 0;
+                result.insert(index_overall, row.clone());
                 row = HashMap::new();
-                indexOverall += 1;
+                index_overall += 1;
             },
             ',' => {
-                row.insert(indexRow, buf.clone().iter().collect::<String>());
+                row.insert(index_row, buf.clone().iter().collect::<String>());
                 buf = vec![];
-                indexRow += 1;
+                index_row += 1;
             },
             _ => {
                 buf.push(c);
@@ -45,10 +69,10 @@ fn parse_csv(content: &String) -> HashMap<u64, HashMap<u64, String>> {
         }
     }
 
-    row.insert(indexRow, buf.clone().iter().collect::<String>());
+    row.insert(index_row, buf.clone().iter().collect::<String>());
     buf = vec![];
-    result.insert(indexOverall, row);
+    result.insert(index_overall, row);
     row = HashMap::new();
 
-    return result;
+    result
 }
