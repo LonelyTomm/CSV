@@ -47,10 +47,8 @@ fn parse_csv(content: &String) -> HashMap<u64, HashMap<u64, String>> {
 
     row.insert(indexRow, buf.clone().iter().collect::<String>());
     buf = vec![];
-    indexRow = 0;
     result.insert(indexOverall, row);
     row = HashMap::new();
-    indexOverall += 1;
 
     return result;
 }
